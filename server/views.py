@@ -23,13 +23,20 @@ def signup(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        user = User.objects.get(username=request.data['username'])
-        user.set_password(request.data['password'])
-        user.save()
+        # user = User.objects.get(username=request.data['username'])
+        # user.set_password(request.data['password'])
+        user = serializer.save()
         token = Token.objects.create(user=user)
         return Response({'token': token.key, 'user': serializer.data})
         
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    request.user.auth_token.delete()
+    return Response({'detail': 'Disconnessione eseguita'}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
